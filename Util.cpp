@@ -7,7 +7,7 @@ cl_platform_id clUtil::clSelectPlatform(int (*input_d)(const char* prompt))
 	const size_t NUM = 16;
 	cl_platform_id platforms[NUM];
 	cl_uint num_platforms;
-	cl_int error = clGetPlatformIDs(sizeof(platforms), platforms, &num_platforms);
+	cl_int error = clGetPlatformIDs(NUM, platforms, &num_platforms);
 	if (error != CL_SUCCESS) { throw clException(error, "clGetPlatformIDs"); }
 
 	std::ostringstream obuf;
@@ -32,7 +32,7 @@ cl_device_id clUtil::clSelectDevice(cl_platform_id platform_id, int (*input_d)(c
 	const size_t NUM = 16;
 	cl_device_id devices[NUM];
 	cl_uint num_devices;
-	cl_int error = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, sizeof(devices), devices, &num_devices);
+	cl_int error = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, NUM, devices, &num_devices);
 	if (error != CL_SUCCESS) { throw clException(error, "clGetDeviceIDs"); }
 
 	std::ostringstream obuf;
