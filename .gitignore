@@ -1,0 +1,25 @@
+# Object files
+*.o
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+*.mexw32
+*.mexw64
+
+# Debug
+*.pdb
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Log
+*.log
