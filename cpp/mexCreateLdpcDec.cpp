@@ -14,12 +14,12 @@ void mexFunction( int nlhs, mxArray *plhs[],
 	int* colsta = (int*)mxGetData(prhs[1]);
 	int* itlver = (int*)mxGetData(prhs[2]);
 	int* chkind = (int*)mxGetData(prhs[3]);
-	int M = mxGetScalar(prhs[4]);
-	int N = mxGetScalar(prhs[5]);
-	int L = mxGetScalar(prhs[6]);
-	int rowMax = mxGetScalar(prhs[7]);
-	int colMax = mxGetScalar(prhs[8]);
-	float alpha = mxGetScalar(prhs[9]);
+	int M = (int) mxGetScalar(prhs[4]);
+	int N = (int) mxGetScalar(prhs[5]);
+	int L = (int) mxGetScalar(prhs[6]);
+	int rowMax = (int) mxGetScalar(prhs[7]);
+	int colMax = (int) mxGetScalar(prhs[8]);
+	float alpha = (float) mxGetScalar(prhs[9]);
 	char* KernelSource = mxArrayToString(prhs[10]);
 
 	plhs[0] = mxCreateNumericMatrix(sizeof(clLDPCdec), 1, mxUINT8_CLASS, mxREAL);

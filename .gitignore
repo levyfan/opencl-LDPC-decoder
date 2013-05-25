@@ -12,6 +12,8 @@
 *.dylib
 *.mexw32
 *.mexw64
+*.mexa64
+*.mexmaci64
 
 # Debug
 *.pdb
@@ -26,3 +28,7 @@
 
 # Auto Save
 *.asv
+
+# Project File
+*.*project
+*.settings

@@ -10,7 +10,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
 {
 	clLDPCdec* hdec = (clLDPCdec*) mxGetData(prhs[0]);
 	float* llr = (float*) mxGetData(prhs[1]);
-	int maxIter = mxGetScalar(prhs[2]);
+	int maxIter = (int) mxGetScalar(prhs[2]);
 	float* softout = (float*) mxGetData(prhs[3]);
 
 #ifdef _DEBUG
