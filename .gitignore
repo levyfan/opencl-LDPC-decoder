@@ -23,3 +23,6 @@
 
 # Log
 *.log
+
+# Auto Save
+*.asv
