@@ -58,10 +58,10 @@ __kernel void cnd(
 	int iLength = _rowsta[k + 1] - iBegin;
 
 	// valid check
-	// for (int i = iBegin; i < iBegin+iLength; i++) {
-	// 	valid += (_softout[_chkind[i]] < 0);
-	// }
-	// _check[k] = valid % 2;
+	for (int i = iBegin; i < iBegin+iLength; i++) {
+	 	valid += (_softout[_chkind[i]] < 0);
+	}
+	_check[k] = valid % 2;
 
 	// horizontal process (CND)
 	for (int i = 0; i < iLength; i++) {
@@ -87,7 +87,7 @@ __kernel void checksum(__global const int* _rowsta, __global const int* _chkind,
 	}
 
 	if (valid % 2 != 0) {
-	    *_fail = 1;
+	    _fail[0] = 1;
 	}
 }
 

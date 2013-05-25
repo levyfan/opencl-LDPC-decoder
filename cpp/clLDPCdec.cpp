@@ -82,8 +82,9 @@ clLDPCdec* clLDPCdec::create(
 	hdec->memset = clCreateKernel(hdec->program, "memset", &error);
 	if (!hdec->memset || error != CL_SUCCESS) { throw clException(error, "clCreateKernel memset"); }
 
-	/**/
+	/*
 	hdec->_checksum = clCreateKernel(hdec->program, "checksum", &error);
+     */
 
 	// Create the input and output arrays in device memory for our calculation
 	hdec->clm_rowsta = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * (M+1), rowsta, NULL);
@@ -96,8 +97,9 @@ clLDPCdec* clLDPCdec::create(
 	hdec->clm_llr = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY, sizeof(float) * N, NULL, NULL);
 	if (!hdec->clm_rowsta || !hdec->clm_colsta || !hdec->clm_itlver || !hdec->clm_chkind || !hdec->clm_xram || !hdec->clm_sout || !hdec->clm_check) { throw clException(error, "clCreateBuffer"); }
 
-	/**/
+	/*
 	hdec->_clm_fail = clCreateBuffer(hdec->context, CL_MEM_WRITE_ONLY, sizeof(unsigned char), NULL, NULL);
+     */
 
 	// Set the arguments to our compute kernel
 	error  = clSetKernelArg(hdec->vnd, 0, sizeof(cl_mem), &hdec->clm_colsta);
@@ -113,12 +115,13 @@ clLDPCdec* clLDPCdec::create(
 	error |= clSetKernelArg(hdec->memset, 0, sizeof(cl_mem), &hdec->clm_xram);
 	if (error != CL_SUCCESS) { throw clException(error, "clSetKernelArg"); }
 
-	/**/
+	/*
 	clSetKernelArg(hdec->_checksum, 0, sizeof(cl_mem), &hdec->clm_rowsta);
 	clSetKernelArg(hdec->_checksum, 1, sizeof(cl_mem), &hdec->clm_chkind);
 	clSetKernelArg(hdec->_checksum, 2, sizeof(cl_mem), &hdec->clm_sout);
 	clSetKernelArg(hdec->_checksum, 3, sizeof(cl_mem), &hdec->clm_check);
-	clSetKernelArg(hdec->_checksum, 3, sizeof(cl_mem), &hdec->_clm_fail);
+	clSetKernelArg(hdec->_checksum, 4, sizeof(cl_mem), &hdec->_clm_fail);
+     */
 
 	return hdec;
 }
@@ -158,16 +161,16 @@ unsigned int clLDPCdec::decode(float* llr, size_t maxIter, float* sout)
 		clEnqueueNDRangeKernel(queue, vnd, 1, NULL, &N, NULL, 0, NULL, NULL);
 		clEnqueueNDRangeKernel(queue,cnd, 1, NULL, &M, NULL, 0, NULL, NULL);
 		
-		/*clEnqueueReadBuffer(queue, clm_check, CL_TRUE, 0, sizeof(unsigned char) * M, check, 0, NULL, NULL);
+		clEnqueueReadBuffer(queue, clm_check, CL_TRUE, 0, sizeof(unsigned char) * M, check, 0, NULL, NULL);
 		#pragma omp parallel for shared(fail)
 		for (size_t i=0; i<M; i++) {
 			if (check[i] != 0) {
-				fail = true;
+				fail = 1;
 			}
-		}*/
+		}
 
-		clEnqueueNDRangeKernel(queue, _checksum, 1, NULL, &M, NULL, 0, NULL, NULL);
-		clEnqueueReadBuffer(queue, _clm_fail, CL_TRUE, 0, sizeof(unsigned char), &fail, 0, NULL, NULL);
+		// clEnqueueNDRangeKernel(queue, _checksum, 1, NULL, &M, NULL, 0, NULL, NULL);
+		// clEnqueueReadBuffer(queue, _clm_fail, CL_TRUE, 0, sizeof(unsigned char), &fail, 0, NULL, NULL);
 	}
 
 	clEnqueueReadBuffer(queue, clm_sout, CL_TRUE, 0, sizeof(float) * N, sout, 0, NULL, NULL);
