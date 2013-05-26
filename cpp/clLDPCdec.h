@@ -74,10 +74,10 @@ class clLDPCdec
 public:
 	virtual ~clLDPCdec(void);
 
-	static clLDPCdec* create(cl_platform_id platform_id, cl_device_id device_id, int* rowsta, int* colsta, int* itlver, int* chkind, size_t M, size_t N, size_t L, int rowMax, int colMax, float alpha, char* kernelSource, void* buf=NULL) throw(clException);
+	static clLDPCdec* create(cl_platform_id platform_id, cl_device_id device_id, unsigned int* rowsta, unsigned int* colsta, unsigned int* itlver, unsigned int* chkind, size_t M, size_t N, size_t L, unsigned int rowMax, unsigned int colMax, float alpha, char* kernelSource, void* buf=NULL) throw(clException);
 	static clLDPCdec* create(cl_platform_id platform_id, cl_device_id device_id, unsigned char* H, size_t M, size_t N, float alpha, char* kernelSource, void* buf=NULL) throw(clException);
 
-	unsigned int decode(float* llr, size_t maxIter, float* sout);
+	unsigned int decode(float* llr, unsigned int maxIter, float* sout);
 
 private:
 	clLDPCdec(void);

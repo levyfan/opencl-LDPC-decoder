@@ -10,15 +10,15 @@
 void mexFunction( int nlhs, mxArray *plhs[],
 				  int nrhs, const mxArray *prhs[])
 {
-	int* rowsta = (int*)mxGetData(prhs[0]);
-	int* colsta = (int*)mxGetData(prhs[1]);
-	int* itlver = (int*)mxGetData(prhs[2]);
-	int* chkind = (int*)mxGetData(prhs[3]);
-	int M = (int) mxGetScalar(prhs[4]);
-	int N = (int) mxGetScalar(prhs[5]);
-	int L = (int) mxGetScalar(prhs[6]);
-	int rowMax = (int) mxGetScalar(prhs[7]);
-	int colMax = (int) mxGetScalar(prhs[8]);
+	unsigned int* rowsta = (unsigned int*) mxGetData(prhs[0]);
+	unsigned int* colsta = (unsigned int*) mxGetData(prhs[1]);
+	unsigned int* itlver = (unsigned int*) mxGetData(prhs[2]);
+	unsigned int* chkind = (unsigned int*) mxGetData(prhs[3]);
+	size_t M = (size_t) mxGetScalar(prhs[4]);
+	size_t N = (size_t) mxGetScalar(prhs[5]);
+	size_t L = (size_t) mxGetScalar(prhs[6]);
+	unsigned int rowMax = (unsigned int) mxGetScalar(prhs[7]);
+	unsigned int colMax = (unsigned int) mxGetScalar(prhs[8]);
 	float alpha = (float) mxGetScalar(prhs[9]);
 	char* KernelSource = mxArrayToString(prhs[10]);
 

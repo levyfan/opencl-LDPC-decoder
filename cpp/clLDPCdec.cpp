@@ -30,12 +30,12 @@ clLDPCdec::clLDPCdec()
 clLDPCdec* clLDPCdec::create(
 	cl_platform_id platform_id,
 	cl_device_id device_id,
-	int* rowsta,
-	int* colsta,
-	int* itlver,
-	int* chkind,
+	unsigned int* rowsta,
+	unsigned int* colsta,
+	unsigned int* itlver,
+	unsigned int* chkind,
 	size_t M, size_t N, size_t L,
-	int rowMax, int colMax, float alpha,
+	unsigned int rowMax, unsigned int colMax, float alpha,
 	char* kernelSource,
 	void* buf)
 {
@@ -71,7 +71,7 @@ clLDPCdec* clLDPCdec::create(
 	if (error != CL_SUCCESS) {
 		const size_t LENGTH = 2048;
 		char buffer[LENGTH];
-		clGetProgramBuildInfo(hdec->program, device_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, NULL);
+		clGetProgramBuildInfo(hdec->program, device_id, CL_PROGRAM_BUILD_LOG, LENGTH, buffer, NULL);
 		throw clException(error, std::string(buffer));
 	}
 
@@ -88,10 +88,10 @@ clLDPCdec* clLDPCdec::create(
 	 */
 
 	// Create the input and output arrays in device memory for our calculation
-	hdec->clm_rowsta = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * (M+1), rowsta, NULL);
-	hdec->clm_colsta = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * (N+1), colsta, NULL);
-	hdec->clm_itlver = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * L, itlver, NULL);
-	hdec->clm_chkind = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * L, chkind, NULL);
+	hdec->clm_rowsta = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(unsigned int) * (M+1), rowsta, NULL);
+	hdec->clm_colsta = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(unsigned int) * (N+1), colsta, NULL);
+	hdec->clm_itlver = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(unsigned int) * L, itlver, NULL);
+	hdec->clm_chkind = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(unsigned int) * L, chkind, NULL);
 	hdec->clm_xram = clCreateBuffer(hdec->context, CL_MEM_READ_WRITE, sizeof(float) * L, NULL, NULL);
 	hdec->clm_sout = clCreateBuffer(hdec->context, CL_MEM_READ_WRITE, sizeof(float) * N, NULL, NULL);
 	hdec->clm_check = clCreateBuffer(hdec->context, CL_MEM_WRITE_ONLY, sizeof(unsigned char) * M, NULL, NULL);
@@ -136,16 +136,16 @@ clLDPCdec* clLDPCdec::create(
 	char* kernelSource,
 	void* buf)
 {
-	int* rowsta = new int[M+1];
-	::memset(rowsta, 0, (M+1)*sizeof(int));
-	int* colsta = new int[N+1];
-	::memset(colsta, 0, (N+1)*sizeof(int));
+	unsigned int* rowsta = new unsigned int[M+1];
+	::memset(rowsta, 0, (M+1)*sizeof(unsigned int));
+	unsigned int* colsta = new unsigned int[N+1];
+	::memset(colsta, 0, (N+1)*sizeof(unsigned int));
 
-	std::map<int, int> tree;
-	int L = 0;
-	for (int n=0; n<N; n++) {
-		for (int m=0; m<M; m++) {
-			int values = m*N+n;
+	std::map<unsigned int, unsigned int> tree;
+	unsigned int L = 0;
+	for (size_t n=0; n<N; n++) {
+		for (size_t m=0; m<M; m++) {
+			unsigned int values = m*N+n;
 			if (H[values]) {
 				tree[values] = L;
 				L++;
@@ -154,21 +154,21 @@ clLDPCdec* clLDPCdec::create(
 			}
 		}
 	}
-	int rowMax = 0;
-	int colMax = 0;
-	for (int m=0; m<M; m++) {
+	unsigned int rowMax = 0;
+	unsigned int colMax = 0;
+	for (size_t m=0; m<M; m++) {
 		rowMax = (rowsta[m+1] > rowMax) ? rowsta[m+1] : rowMax;
 		rowsta[m+1] += rowsta[m];
 	}
-	for (int n=0; n<N; n++) {
+	for (size_t n=0; n<N; n++) {
 		colMax = (colsta[n+1] > colMax) ? colsta[n+1] : colMax;
 		colsta[n+1] += colsta[n];
 	}
 
-	int* itlver = new int[L];
-	int* chkind = new int[L];
-	int index = 0;
-	for (std::map<int, int>::iterator ptr=tree.begin(); ptr!=tree.end(); ptr++) {
+	unsigned int* itlver = new unsigned int[L];
+	unsigned int* chkind = new unsigned int[L];
+	size_t index = 0;
+	for (std::map<unsigned int, unsigned int>::iterator ptr=tree.begin(); ptr!=tree.end(); ptr++) {
 		chkind[index] = ptr->first % N;
 		itlver[index] = ptr->second;
 		index++;
@@ -205,7 +205,7 @@ clLDPCdec::~clLDPCdec(void)
 	clReleaseContext(context);
 }
 
-unsigned int clLDPCdec::decode(float* llr, size_t maxIter, float* sout)
+unsigned int clLDPCdec::decode(float* llr, unsigned int maxIter, float* sout)
 {
 	unsigned int iter;
 	unsigned char fail = 1;
