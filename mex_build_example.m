@@ -1,8 +1,12 @@
 clear all; close all; clc;
 
-include = '-I"C:\Program Files (x86)\AMD APP\include"';
-lib = '-lOpenCL -L"C:\Program Files (x86)\AMD APP\lib\x86_64"';
-compile = 'COMPFLAGS="$COMPFLAGS /MD /Qopenmp /O2"';
+% include = '-I"C:\Program Files (x86)\AMD APP\include"';
+include = '-I"C:\Program Files (x86)\ATI Stream\include"';
+
+% lib = '-lOpenCL -L"C:\Program Files (x86)\AMD APP\lib\x86_64"';
+lib = '-lOpenCL -L"C:\Program Files (x86)\ATI Stream\lib\x86_64"';
+
+compile = 'COMPFLAGS="$COMPFLAGS /MD /Qopenmp /O3 /Ot"';
 link = 'LINKFLAGS="$LINKFLAGS /MACHINE:X64"';
 
 parameters = [ ...
