@@ -1,4 +1,5 @@
 #include <sstream>
+#include <map>
 #include "clLDPCdec.h"
 
 clLDPCdec::clLDPCdec()
@@ -84,7 +85,7 @@ clLDPCdec* clLDPCdec::create(
 
 	/*
 	hdec->_checksum = clCreateKernel(hdec->program, "checksum", &error);
-     */
+	 */
 
 	// Create the input and output arrays in device memory for our calculation
 	hdec->clm_rowsta = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(int) * (M+1), rowsta, NULL);
@@ -99,7 +100,7 @@ clLDPCdec* clLDPCdec::create(
 
 	/*
 	hdec->_clm_fail = clCreateBuffer(hdec->context, CL_MEM_WRITE_ONLY, sizeof(unsigned char), NULL, NULL);
-     */
+	 */
 
 	// Set the arguments to our compute kernel
 	error  = clSetKernelArg(hdec->vnd, 0, sizeof(cl_mem), &hdec->clm_colsta);
@@ -121,8 +122,64 @@ clLDPCdec* clLDPCdec::create(
 	clSetKernelArg(hdec->_checksum, 2, sizeof(cl_mem), &hdec->clm_sout);
 	clSetKernelArg(hdec->_checksum, 3, sizeof(cl_mem), &hdec->clm_check);
 	clSetKernelArg(hdec->_checksum, 4, sizeof(cl_mem), &hdec->_clm_fail);
-     */
+	 */
 
+	return hdec;
+}
+
+clLDPCdec* clLDPCdec::create(
+	cl_platform_id platform_id,
+	cl_device_id device_id,
+	unsigned char* H,
+	size_t M, size_t N,
+	float alpha,
+	char* kernelSource,
+	void* buf)
+{
+	int* rowsta = new int[M+1];
+	::memset(rowsta, 0, (M+1)*sizeof(int));
+	int* colsta = new int[N+1];
+	::memset(colsta, 0, (N+1)*sizeof(int));
+
+	std::map<int, int> tree;
+	int L = 0;
+	for (int n=0; n<N; n++) {
+		for (int m=0; m<M; m++) {
+			int values = m*N+n;
+			if (H[values]) {
+				tree[values] = L;
+				L++;
+				rowsta[m+1]++;
+				colsta[n+1]++;
+			}
+		}
+	}
+	int rowMax = 0;
+	int colMax = 0;
+	for (int m=0; m<M; m++) {
+		rowMax = (rowsta[m+1] > rowMax) ? rowsta[m+1] : rowMax;
+		rowsta[m+1] += rowsta[m];
+	}
+	for (int n=0; n<N; n++) {
+		colMax = (colsta[n+1] > colMax) ? colsta[n+1] : colMax;
+		colsta[n+1] += colsta[n];
+	}
+
+	int* itlver = new int[L];
+	int* chkind = new int[L];
+	int index = 0;
+	for (std::map<int, int>::iterator ptr=tree.begin(); ptr!=tree.end(); ptr++) {
+		chkind[index] = ptr->first % N;
+		itlver[index] = ptr->second;
+		index++;
+	}
+	
+	clLDPCdec* hdec = create(platform_id, device_id, rowsta, colsta, itlver, chkind, M, N, L, rowMax, colMax, alpha, kernelSource, buf);
+
+	delete[] chkind;
+	delete[] itlver;
+	delete[] colsta;
+	delete[] rowsta;
 	return hdec;
 }
 

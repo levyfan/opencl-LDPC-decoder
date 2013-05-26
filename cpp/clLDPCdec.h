@@ -75,6 +75,7 @@ public:
 	virtual ~clLDPCdec(void);
 
 	static clLDPCdec* create(cl_platform_id platform_id, cl_device_id device_id, int* rowsta, int* colsta, int* itlver, int* chkind, size_t M, size_t N, size_t L, int rowMax, int colMax, float alpha, char* kernelSource, void* buf=NULL) throw(clException);
+	static clLDPCdec* create(cl_platform_id platform_id, cl_device_id device_id, unsigned char* H, size_t M, size_t N, float alpha, char* kernelSource, void* buf=NULL) throw(clException);
 
 	unsigned int decode(float* llr, size_t maxIter, float* sout);
 

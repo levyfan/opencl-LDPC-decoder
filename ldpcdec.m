@@ -8,8 +8,8 @@ classdef ldpcdec < handle
       function obj = ldpcdec(H, kernel_cl_file, alpha)
             [m, n] = size(H);
             [row, col] = find(H);
-            [~, itlver] = sort((row-1)*n + col);
-            chkind = int32(col(itlver)'-1);
+            [chkind, itlver] = sort((row-1)*n + col);
+            chkind = int32(mod(chkind'-1, n));
             itlver = int32(itlver'-1);
             l = length(itlver);
             rowsta = int32(cumsum([0 full(sum(H,2))']));
