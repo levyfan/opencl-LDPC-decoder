@@ -28,22 +28,18 @@
 
 /*
 * The gateway function
-* hdec = mexCreateLdpcDec(rowsta, colsta, itlver, chkind, M, N, L, rowMax, colMax, KernelSource, alpha)
+* hdec = mexCreateLdpcDec(H, KernelSource, alpha)
 */
 void mexFunction( int nlhs, mxArray *plhs[],
-				  int nrhs, const mxArray *prhs[])
+	int nrhs, const mxArray *prhs[])
 {
-	unsigned int* rowsta = (unsigned int*) mxGetData(prhs[0]);
-	unsigned int* colsta = (unsigned int*) mxGetData(prhs[1]);
-	unsigned int* itlver = (unsigned int*) mxGetData(prhs[2]);
-	unsigned int* chkind = (unsigned int*) mxGetData(prhs[3]);
-	size_t M = (size_t) mxGetScalar(prhs[4]);
-	size_t N = (size_t) mxGetScalar(prhs[5]);
-	size_t L = (size_t) mxGetScalar(prhs[6]);
-	unsigned int rowMax = (unsigned int) mxGetScalar(prhs[7]);
-	unsigned int colMax = (unsigned int) mxGetScalar(prhs[8]);
-	char* KernelSource = mxArrayToString(prhs[9]);
-	float alpha = (float) mxGetScalar(prhs[10]);
+	mwIndex *ir = mxGetIr(prhs[0]);
+	mwIndex *jc = mxGetJc(prhs[0]);
+	size_t M = mxGetM(prhs[0]);
+	size_t N = mxGetN(prhs[0]);
+
+	char* KernelSource = mxArrayToString(prhs[1]);
+	float alpha = (float) mxGetScalar(prhs[2]);
 
 	plhs[0] = mxCreateNumericMatrix(sizeof(clLDPCdec), 1, mxUINT8_CLASS, mxREAL);
 
@@ -55,7 +51,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
 	try {
 		cl_platform_id platform_id = clUtil::clSelectPlatform(mexUtil::input_d);
 		cl_device_id device_id = clUtil::clSelectDevice(platform_id, mexUtil::input_d);
-		hdec = clLDPCdec::create(device_id, rowsta, colsta, itlver, chkind, M, N, L, rowMax, colMax, KernelSource, alpha, mxGetData(plhs[0]));
+		hdec = clLDPCdec::create<mwIndex>(device_id, ir, jc, M, N, KernelSource, alpha, mxGetData(plhs[0]));
 	} catch (clException& error) {
 		if(hdec != NULL) {
 			hdec->~clLDPCdec();
@@ -67,7 +63,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
 		}
 		mexErrMsgIdAndTxt("clLDPCdec:clLDPCdec", "Fatal error");
 	}
-	
+
 #ifdef _DEBUG
 	mexPrintf("call clLDPCdec::clLDPCdec() end ...\n");
 #endif

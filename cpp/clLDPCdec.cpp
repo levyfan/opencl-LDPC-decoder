@@ -1,3 +1,26 @@
+/*******************************************************************************
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013  FAN. Liwen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ ******************************************************************************/
 #include <sstream>
 #include <map>
 #include "clLDPCdec.h"
@@ -28,15 +51,15 @@ clLDPCdec::clLDPCdec()
 }
 
 clLDPCdec* clLDPCdec::create(
-	cl_platform_id platform_id,
 	cl_device_id device_id,
 	unsigned int* rowsta,
 	unsigned int* colsta,
 	unsigned int* itlver,
 	unsigned int* chkind,
 	size_t M, size_t N, size_t L,
-	unsigned int rowMax, unsigned int colMax, float alpha,
+	unsigned int rowMax, unsigned int colMax,
 	char* kernelSource,
+	float alpha,
 	void* buf)
 {
 	clLDPCdec* hdec = NULL;
@@ -83,10 +106,6 @@ clLDPCdec* clLDPCdec::create(
 	hdec->memset = clCreateKernel(hdec->program, "memset", &error);
 	if (!hdec->memset || error != CL_SUCCESS) { throw clException(error, "clCreateKernel memset"); }
 
-	/*
-	hdec->_checksum = clCreateKernel(hdec->program, "checksum", &error);
-	 */
-
 	// Create the input and output arrays in device memory for our calculation
 	hdec->clm_rowsta = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(unsigned int) * (M+1), rowsta, NULL);
 	hdec->clm_colsta = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(unsigned int) * (N+1), colsta, NULL);
@@ -97,10 +116,6 @@ clLDPCdec* clLDPCdec::create(
 	hdec->clm_check = clCreateBuffer(hdec->context, CL_MEM_WRITE_ONLY, sizeof(unsigned char) * M, NULL, NULL);
 	hdec->clm_llr = clCreateBuffer(hdec->context, CL_MEM_READ_ONLY, sizeof(float) * N, NULL, NULL);
 	if (!hdec->clm_rowsta || !hdec->clm_colsta || !hdec->clm_itlver || !hdec->clm_chkind || !hdec->clm_xram || !hdec->clm_sout || !hdec->clm_check) { throw clException(error, "clCreateBuffer"); }
-
-	/*
-	hdec->_clm_fail = clCreateBuffer(hdec->context, CL_MEM_WRITE_ONLY, sizeof(unsigned char), NULL, NULL);
-	 */
 
 	// Set the arguments to our compute kernel
 	error  = clSetKernelArg(hdec->vnd, 0, sizeof(cl_mem), &hdec->clm_colsta);
@@ -116,24 +131,15 @@ clLDPCdec* clLDPCdec::create(
 	error |= clSetKernelArg(hdec->memset, 0, sizeof(cl_mem), &hdec->clm_xram);
 	if (error != CL_SUCCESS) { throw clException(error, "clSetKernelArg"); }
 
-	/*
-	clSetKernelArg(hdec->_checksum, 0, sizeof(cl_mem), &hdec->clm_rowsta);
-	clSetKernelArg(hdec->_checksum, 1, sizeof(cl_mem), &hdec->clm_chkind);
-	clSetKernelArg(hdec->_checksum, 2, sizeof(cl_mem), &hdec->clm_sout);
-	clSetKernelArg(hdec->_checksum, 3, sizeof(cl_mem), &hdec->clm_check);
-	clSetKernelArg(hdec->_checksum, 4, sizeof(cl_mem), &hdec->_clm_fail);
-	 */
-
 	return hdec;
 }
 
 clLDPCdec* clLDPCdec::create(
-	cl_platform_id platform_id,
 	cl_device_id device_id,
 	unsigned char* H,
 	size_t M, size_t N,
-	float alpha,
 	char* kernelSource,
+	float alpha,
 	void* buf)
 {
 	unsigned int* rowsta = new unsigned int[M+1];
@@ -174,7 +180,7 @@ clLDPCdec* clLDPCdec::create(
 		index++;
 	}
 	
-	clLDPCdec* hdec = create(platform_id, device_id, rowsta, colsta, itlver, chkind, M, N, L, rowMax, colMax, alpha, kernelSource, buf);
+	clLDPCdec* hdec = create(device_id, rowsta, colsta, itlver, chkind, M, N, L, rowMax, colMax, kernelSource, alpha, buf);
 
 	delete[] chkind;
 	delete[] itlver;
@@ -182,6 +188,65 @@ clLDPCdec* clLDPCdec::create(
 	delete[] rowsta;
 	return hdec;
 }
+
+template<class T> clLDPCdec* clLDPCdec::create(
+	cl_device_id device_id,
+	T* Ir, T* Jc,
+	size_t M, size_t N,
+	char* kernelSource,
+	float alpha,
+	void* buf)
+{
+	unsigned int* rowsta = new unsigned int[M+1];
+	::memset(rowsta, 0, (M+1)*sizeof(unsigned int));
+	unsigned int* colsta = new unsigned int[N+1];
+	::memset(colsta, 0, (N+1)*sizeof(unsigned int));
+
+	std::map<unsigned int, unsigned int> tree;
+	unsigned int L = 0;
+	for (size_t n=0; n<N; n++) {
+		for (T i=Jc[n]; i<Jc[n+1]; i++){
+			T m = Ir[i];
+			unsigned int values = m*N+n;
+			tree[values] = L;
+			L++;
+			rowsta[m+1]++;
+			colsta[n+1]++;
+		}
+	}
+
+	unsigned int rowMax = 0;
+	unsigned int colMax = 0;
+	for (size_t m=0; m<M; m++) {
+		rowMax = (rowsta[m+1] > rowMax) ? rowsta[m+1] : rowMax;
+		rowsta[m+1] += rowsta[m];
+	}
+	for (size_t n=0; n<N; n++) {
+		colMax = (colsta[n+1] > colMax) ? colsta[n+1] : colMax;
+		colsta[n+1] += colsta[n];
+	}
+
+	unsigned int* itlver = new unsigned int[L];
+	unsigned int* chkind = new unsigned int[L];
+	size_t index = 0;
+	for (std::map<unsigned int, unsigned int>::iterator ptr=tree.begin(); ptr!=tree.end(); ptr++) {
+		chkind[index] = ptr->first % N;
+		itlver[index] = ptr->second;
+		index++;
+	}
+
+	clLDPCdec* hdec = create(device_id, rowsta, colsta, itlver, chkind, M, N, L, rowMax, colMax, kernelSource, alpha, buf);
+
+	delete[] chkind;
+	delete[] itlver;
+	delete[] colsta;
+	delete[] rowsta;
+	return hdec;
+}
+
+template clLDPCdec* clLDPCdec::create<size_t>(cl_device_id device_id, size_t* Ir, size_t* Jc, size_t M, size_t N, char* kernelSource, float alpha, void* buf);
+template clLDPCdec* clLDPCdec::create<int>(cl_device_id device_id, int* Ir, int* Jc, size_t M, size_t N, char* kernelSource, float alpha, void* buf);
+template clLDPCdec* clLDPCdec::create<unsigned int>(cl_device_id device_id, unsigned int* Ir, unsigned int* Jc, size_t M, size_t N, char* kernelSource, float alpha, void* buf);
 
 clLDPCdec::~clLDPCdec(void)
 {
@@ -225,9 +290,6 @@ unsigned int clLDPCdec::decode(float* llr, unsigned int maxIter, float* sout)
 				fail = 1;
 			}
 		}
-
-		// clEnqueueNDRangeKernel(queue, _checksum, 1, NULL, &M, NULL, 0, NULL, NULL);
-		// clEnqueueReadBuffer(queue, _clm_fail, CL_TRUE, 0, sizeof(unsigned char), &fail, 0, NULL, NULL);
 	}
 
 	clEnqueueReadBuffer(queue, clm_sout, CL_TRUE, 0, sizeof(float) * N, sout, 0, NULL, NULL);

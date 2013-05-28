@@ -1,3 +1,26 @@
+/*******************************************************************************
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013  FAN. Liwen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ ******************************************************************************/
 #pragma once
 #ifndef _CL_LDPC_DEC_H_
 #define _CL_LDPC_DEC_H_
@@ -74,9 +97,10 @@ class clLDPCdec
 public:
 	virtual ~clLDPCdec(void);
 
-	static clLDPCdec* create(cl_platform_id platform_id, cl_device_id device_id, unsigned int* rowsta, unsigned int* colsta, unsigned int* itlver, unsigned int* chkind, size_t M, size_t N, size_t L, unsigned int rowMax, unsigned int colMax, float alpha, char* kernelSource, void* buf=NULL) throw(clException);
-	static clLDPCdec* create(cl_platform_id platform_id, cl_device_id device_id, unsigned char* H, size_t M, size_t N, float alpha, char* kernelSource, void* buf=NULL) throw(clException);
-
+	static clLDPCdec* create(cl_device_id device_id, unsigned int* rowsta, unsigned int* colsta, unsigned int* itlver, unsigned int* chkind, size_t M, size_t N, size_t L, unsigned int rowMax, unsigned int colMax, char* kernelSource, float alpha=1, void* buf=NULL) throw(clException);
+	static clLDPCdec* create(cl_device_id device_id, unsigned char* H, size_t M, size_t N, char* kernelSource, float alpha=1, void* buf=NULL) throw(clException);
+	template<class T> static clLDPCdec* create(cl_device_id device_id, T* Ir, T* Jc, size_t M, size_t N, char* kernelSource, float alpha=1, void* buf=NULL) throw(clException);
+	
 	unsigned int decode(float* llr, unsigned int maxIter, float* sout);
 
 private:

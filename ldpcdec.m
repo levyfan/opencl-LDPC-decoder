@@ -18,9 +18,14 @@ classdef ldpcdec < handle
             COL_MAX = max(sum(H));
             
             src = fileread(kernel_cl_file);
-            
-            obj.hdec = mexCreateLDPCDecoder(uint32(rowsta), uint32(colsta), uint32(itlver), uint32(chkind), m, n, l, ROW_MAX, COL_MAX, alpha, src);
+            obj.hdec = mexCreateLDPCDecoder(uint32(rowsta), uint32(colsta), uint32(itlver), uint32(chkind), m, n, l, ROW_MAX, COL_MAX, src, alpha);
             obj.decoded_softs_buffer = single(zeros(1, n));
+      end
+      
+      function obj = ldpcdec_sparse_matrix(H, kernel_cl_file, alpha)
+          src = fileread(kernel_cl_file);
+          obj.hdec = mexCreateLDPCDecoderSparseMatrix(sparse(H), src, alpha);
+          obj.decoded_softs_buffer = single(zeros(1, n));
       end
       
       function [iter, decoded_bits] = decode(obj, llr, maxIter)
